@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  auth-service:
+      build: .
+      container_name: auth-service
+      environment:
+        DATABASE_URL: ${DATABASE_URL}
+        RABBITMQ_URL: ${RABBITMQ_URL}
+        REDIS_URL: ${REDIS_URL}
+      volumes:
+        - ./:/app
+      working_dir: /app
+      command: npm run start:prod
+      ports:
+        - "3000:3000"
+      networks:
+        - postgres-net
+        - rabbitmq-net
+        - redis-net
+        - nginx-gateway
+  auth-worker:
+    build:
+      context: .
+    container_name: auth-worker
+    command: npm run start:worker:prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      REDIS_URL: ${REDIS_URL}
+    depends_on:
+      - auth-service
+    networks:
+      - rabbitmq-net
+      - postgres-net
+      - redis-net
+      
+networks:
+  postgres-net:
+    external: true
+  rabbitmq-net:
+    external: true
+  redis-net:
+    external: true
+  nginx-gateway:
+    external: true
+

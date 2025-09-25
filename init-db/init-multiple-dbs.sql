@@ -1,0 +1,6 @@
+CREATE DATABASE authdb;
+CREATE DATABASE userdb;
+CREATE DATABASE carddb;
+CREATE DATABASE historydb;
+CREATE DATABASE paymentdb;
+CREATE DATABASE verificationdb;

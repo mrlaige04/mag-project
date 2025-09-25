@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model TwoFactorSecret {
+  id        String   @id @default(uuid())
+  userId    String
+  secret    String
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

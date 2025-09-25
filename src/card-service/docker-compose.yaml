@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  card-service:
+      build: .
+      container_name: card-service
+      environment:
+        DATABASE_URL: ${DATABASE_URL}
+        RABBITMQ_URL: ${RABBITMQ_URL}
+      volumes:
+        - ./:/app
+      working_dir: /app
+      command: npm run start:prod
+      ports:
+        - "3003:3003"
+      networks:
+        - postgres-net
+        - rabbitmq-net
+        - nginx-gateway
+  card-worker:
+    build: .
+    container_name: card-worker
+    command: npm run start:worker:prod
+    environment:
+      NODE_ENV: production
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - rabbitmq-net
+      - postgres-net
+
+networks:
+  postgres-net:
+    external: true
+  rabbitmq-net:
+    external: true
+  nginx-gateway:
+    external: true
+

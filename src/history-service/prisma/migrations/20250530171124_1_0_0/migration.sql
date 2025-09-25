@@ -1,0 +1,13 @@
+-- CreateEnum
+CREATE TYPE "EventType" AS ENUM ('LOGIN', 'LOGOUT', 'REGISTER', 'TRANSFER', 'CARD_BLOCK', 'CARD_UNBLOCK', 'CARD_CLOSE', 'VERIFICATION', 'PASSWORD_CHANGE', 'PROFILE_UPDATE', 'ADMIN_ACTION');
+
+-- CreateTable
+CREATE TABLE "Event" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT,
+    "eventType" "EventType" NOT NULL,
+    "meta" JSONB NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
+);

@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id         String   @id @default(uuid())
+  userId     String?
+  eventType  EventType
+  meta       Json
+  timestamp  DateTime @default(now())
+}
+
+enum EventType {
+  LOGIN
+  LOGOUT
+  REGISTER
+  TRANSFER
+  CARD_BLOCK
+  CARD_UNBLOCK
+  CARD_CLOSE
+  VERIFICATION
+  PASSWORD_CHANGE
+  PROFILE_UPDATE
+  ADMIN_ACTION
+} 

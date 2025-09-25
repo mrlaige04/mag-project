@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Document {
+  id             String   @id @default(uuid())
+  userId         String
+  documentType   DocumentType
+  documentNumber String
+  issuedDate     DateTime
+  expiryDate     DateTime
+  fileUrl        String
+  status         DocumentStatus
+  uploadedAt     DateTime @default(now())
+}
+
+enum DocumentType {
+  id_card
+  drivers_license
+}
+
+enum DocumentStatus {
+  pending
+  approved
+  rejected
+}

@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Card {
+  id            String   @id @default(uuid())
+  userId        String
+  cardNumber    String   @unique
+  cardType      CardType
+  provider      CardProvider
+  status        CardStatus
+  expirationDate DateTime
+  cvvHash       String
+  issuedAt      DateTime @default(now())
+  balance       Decimal  @default(0)
+  currency      String   @default("UAH")
+}
+
+enum CardType {
+  debit
+  credit
+}
+
+enum CardStatus {
+  active
+  blocked
+  closed
+}
+
+model CardApplication {
+  id         String   @id @default(uuid())
+  userId     String
+  cardType   CardType
+  provider   CardProvider
+  status     ApplicationStatus
+  appliedAt  DateTime @default(now())
+  processedAt DateTime?
+}
+
+enum CardProvider {
+  visa
+  mastercard
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+}
