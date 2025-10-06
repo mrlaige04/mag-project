@@ -20,6 +20,9 @@
     "start:prod": "node dist/src/main.js",
     "start:worker:prod": "node dist/src/worker.js"
   },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^4.0.2",

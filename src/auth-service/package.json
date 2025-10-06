@@ -7,7 +7,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "build": "rimraf dist && nest build",
-    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "prisma:generate": "npx prisma generate",
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
     "start:worker": "ts-node src/worker.ts",
     "lint": "eslint \"src/**/*.{js,ts}\"",
@@ -19,6 +19,9 @@
     "test:coverage": "jest --coverage",
     "start:prod": "node dist/src/main.js",
     "start:worker:prod": "node dist/src/worker.js"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",

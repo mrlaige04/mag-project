@@ -8,8 +8,6 @@ services:
         DATABASE_URL: ${DATABASE_URL}
         RABBITMQ_URL: ${RABBITMQ_URL}
         REDIS_URL: ${REDIS_URL}
-      volumes:
-        - ./:/app
       working_dir: /app
       command: npm run start:prod
       ports:
