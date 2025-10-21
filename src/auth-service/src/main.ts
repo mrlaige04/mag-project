@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import { RpcToHttpExceptionFilter } from '../common/exceptions';
 import { ConfigService } from '@nestjs/config';
@@ -30,6 +31,23 @@ async function bootstrap() {
   await app.startAllMicroservices();
 
   const port = configService.get<number>('PORT') ?? 3000;
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Auth Service')
+    .setDescription('Auth service API')
+    .setVersion('1.0.0')
+    .addCookieAuth('sessionId')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('auth/docs', app, swaggerDocument, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      requestInterceptor: (req) => {
+        req.credentials = 'include';
+        return req;
+      },
+    },
+  });
 
   await app.listen(port);
   console.log(`Auth Service is running on http://localhost:${port}`);
