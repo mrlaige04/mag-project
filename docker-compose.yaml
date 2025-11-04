@@ -12,11 +12,18 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_LOAD_DEFINITIONS: /etc/rabbitmq/definitions.json
     volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
       - ./config/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json
       - ./config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     restart: unless-stopped
     networks:
       - rabbitmq-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
   postgres:
     image: postgres:15-alpine
     container_name: postgres
@@ -31,6 +38,12 @@ services:
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - postgres-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -53,6 +66,12 @@ services:
       - redisdata:/data
     networks:
       - redis-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
   nginx-gateway:
     image: nginx:alpine
     container_name: nginx-gateway
@@ -76,10 +95,17 @@ services:
       - minio-data:/data
     networks:
       - minio-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
 
 volumes:
   pgdata:
   redisdata:
+  rabbitmq-data:
   minio-data:
 
 networks:
