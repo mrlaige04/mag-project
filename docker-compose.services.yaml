@@ -1,0 +1,46 @@
+services:
+  nginx-gateway:
+    image: nginx:alpine
+    container_name: nginx-gateway
+    ports:
+      - '80:80'
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - user-service
+      - verification-service
+      - card-service
+      - payment-service
+      - history-service
+    restart: unless-stopped
+    networks:
+      - nginx-gateway
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+include:
+  - path: ./src/auth-service/docker-compose.yaml
+    env_file: ./src/auth-service/.env
+    
+  - path: ./src/user-service/docker-compose.yaml
+    env_file: ./src/user-service/.env
+    
+  - path: ./src/card-service/docker-compose.yaml
+    env_file: ./src/card-service/.env
+    
+  - path: ./src/payment-service/docker-compose.yaml
+    env_file: ./src/payment-service/.env
+    
+  - path: ./src/history-service/docker-compose.yaml
+    env_file: ./src/history-service/.env
+    
+  - path: ./src/verification-service/docker-compose.yaml
+    env_file: ./src/verification-service/.env
+
+networks:
+  nginx-gateway:
+    external: true
