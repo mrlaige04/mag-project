@@ -1,18 +1,48 @@
+# Dependencies
 node_modules
-dist
+npm-debug.log
 
-*.log
-*.tmp
-
+# Testing
 coverage
-__tests__/
 *.test.ts
 *.spec.ts
+__tests__
+__mocks__
 
-.vscode/
-.idea/
+# Build
+dist
+build
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+
+# OS
 .DS_Store
 Thumbs.db
 
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
 .git
 .gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yaml
+
+# Documentation
+README.md
+*.md
+
+# Environment
+.env
+.env.*
+!.env.example

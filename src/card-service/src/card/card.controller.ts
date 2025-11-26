@@ -26,7 +26,16 @@ export class CardController {
   @UseGuards(SessionGuard, VerificationGuard)
   @ApiCookieAuth('sessionId')
   @ApiOperation({ summary: 'Open a new card application' })
-  @ApiBody({ type: OpenCardDto })
+  @ApiBody({
+    description: 'Payload for opening a new card application',
+    type: OpenCardDto,
+    schema: {
+      example: {
+        cardType: 'debit',
+        provider: 'visa',
+      },
+    },
+  })
   @ApiOkResponse({ description: 'Application created' })
   async openCard(@Body() dto: OpenCardDto, @Req() req) {
     const userId = req.user.userId;

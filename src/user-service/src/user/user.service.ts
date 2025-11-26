@@ -19,6 +19,22 @@ export class UserService {
     @Inject('HISTORY_SERVICE') private readonly historyClient: ClientProxy,
   ) {}
 
+  async findAll() {
+    return this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        fullName: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        twoFactorEnabled: true,
+      },
+    });
+  }
+
   async findById(id: string) {
     return this.prisma.user.findUnique({ where: { id } });
   }

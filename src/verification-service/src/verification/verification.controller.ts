@@ -27,7 +27,24 @@ export class VerificationController {
   @ApiCookieAuth('sessionId')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload ID document for verification' })
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' }, documentType: { type: 'string', enum: ['id_card','drivers_license'] } }, required: ['file','documentType'] } })
+  @ApiBody({
+    description: 'Payload for document upload',
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        documentType: {
+          type: 'string',
+          enum: ['id_card', 'drivers_license'],
+        },
+      },
+      required: ['file', 'documentType'],
+      example: {
+        documentType: 'id_card',
+        file: '(binary file)',
+      },
+    },
+  })
   @ApiOkResponse({ description: 'Verification submitted' })
   async verify(
     @UploadedFile() file: File,
@@ -51,11 +68,20 @@ export class VerificationController {
     );
   }
 
-  @Post('admin')
+  @Post('verify')
   @UseGuards(SessionGuard, AdminRoleGuard)
   @ApiCookieAuth('sessionId')
   @ApiOperation({ summary: 'Admin verifies a document by id' })
-  @ApiBody({ type: AdminVerifyDto })
+  @ApiBody({
+    description: 'Admin verification action',
+    type: AdminVerifyDto,
+    schema: {
+      example: {
+        documentId: 'a8f5f167-2e4f-4b9e-8c2d-123456789abc',
+        action: 'approve',
+      },
+    },
+  })
   @ApiOkResponse({ description: 'Document verified by admin' })
   async adminVerify(@Body() verifyDto: AdminVerifyDto) {
     if (!verifyDto.documentId) {
@@ -73,5 +99,14 @@ export class VerificationController {
   async getVerification(@Req() req) {
     const userId = req.user.userId;
     return await this.verificationService.getVerification(userId);
+  }
+
+  @Get('/all')
+  @UseGuards(SessionGuard, AdminRoleGuard)
+  @ApiCookieAuth('sessionId')
+  @ApiOperation({ summary: 'Get all verifications (admin only)' })
+  @ApiOkResponse({ description: 'All verifications returned' })
+  async getAllVerifications() {
+    return await this.verificationService.getAllVerifications();
   }
 }

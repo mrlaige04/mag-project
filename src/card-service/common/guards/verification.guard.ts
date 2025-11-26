@@ -1,7 +1,7 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException, Inject } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException, Inject, OnModuleInit } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Request } from 'express';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 interface RequestWithUser extends Request {
     user?: {
@@ -12,10 +12,14 @@ interface RequestWithUser extends Request {
   }
 
 @Injectable()
-export class VerificationGuard implements CanActivate {
+export class VerificationGuard implements CanActivate, OnModuleInit {
   constructor(
     @Inject('VERIFICATION_SERVICE') private readonly verificationClient: ClientProxy,
   ) {}
+
+  async onModuleInit() {
+    await this.verificationClient.connect();
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<RequestWithUser>();
@@ -23,7 +27,7 @@ export class VerificationGuard implements CanActivate {
     if (!userId) throw new ForbiddenException('No user id in session');
   
     const status: any = await firstValueFrom(
-        this.verificationClient.send({ cmd: 'get-verification-status' }, userId)
+        this.verificationClient.send({ cmd: 'get-verification-status' }, userId).pipe(timeout(5000))
     );
 
     console.log(status);

@@ -6,19 +6,19 @@
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:prod": "node dist/src/main.js",
     "build": "rimraf dist && nest build",
-    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "prisma:generate": "npx prisma generate",
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
     "start:worker": "ts-node src/worker.ts",
+    "start:worker:prod": "node dist/src/worker.js",
     "lint": "eslint \"src/**/*.{js,ts}\"",
     "lint:fix": "eslint \"src/**/*.{js,ts}\" --fix",
     "prettier": "prettier --check \"src/**/*.{js,ts,json,md}\"",
     "prettier:fix": "prettier --write \"src/**/*.{js,ts,json,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "start:prod": "node dist/src/main.js",
-    "start:worker:prod": "node dist/src/worker.js"
+    "test:coverage": "jest --coverage"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"

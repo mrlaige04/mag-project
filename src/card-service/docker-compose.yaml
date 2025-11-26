@@ -1,31 +1,67 @@
 version: '3.8'
 
 services:
-  card-service:
-      build: .
-      container_name: card-service
-      environment:
-        DATABASE_URL: ${DATABASE_URL}
-        RABBITMQ_URL: ${RABBITMQ_URL}
-      working_dir: /app
-      command: npm run start:prod
-      ports:
-        - "3003:3003"
-      networks:
-        - postgres-net
-        - rabbitmq-net
-        - nginx-gateway
-  card-worker:
-    build: .
-    container_name: card-worker
-    command: npm run start:worker:prod
+  card-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: card-migrate
     environment:
-      NODE_ENV: production
-      RABBITMQ_URL: ${RABBITMQ_URL}
       DATABASE_URL: ${DATABASE_URL}
+    command: npx prisma migrate dev
+    networks:
+      - postgres-net
+    profiles:
+      - tools
+
+  card-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: card-service
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT}
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE_AUTH: ${RABBITMQ_QUEUE_AUTH}
+      RABBITMQ_QUEUE_VERIFICATION: ${RABBITMQ_QUEUE_VERIFICATION}
+      RABBITMQ_QUEUE_HISTORY: ${RABBITMQ_QUEUE_HISTORY}
+    command: npm run start:dev
+    ports:
+      - "3003:3003"
+    volumes:
+      # Hot reload
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    networks:
+      - postgres-net
+      - rabbitmq-net
+      - nginx-gateway
+    restart: unless-stopped
+
+  card-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: card-worker
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+    command: npm run start:worker
+    volumes:
+      - ./src:/app/src
     networks:
       - rabbitmq-net
       - postgres-net
+    depends_on:
+      - card-service
+    restart: unless-stopped
 
 networks:
   postgres-net:
@@ -34,4 +70,3 @@ networks:
     external: true
   nginx-gateway:
     external: true
-

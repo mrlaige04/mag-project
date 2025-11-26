@@ -1,31 +1,66 @@
 version: '3.8'
 
 services:
-  history-service:
-      build: .
-      container_name: history-service
-      environment:
-        DATABASE_URL: ${DATABASE_URL}
-        RABBITMQ_URL: ${RABBITMQ_URL}
-      working_dir: /app
-      command: npm run start:prod
-      ports:
-        - "3005:3005"
-      networks:
-        - postgres-net
-        - rabbitmq-net
-        - nginx-gateway
-  history-worker:
-    build: .
-    container_name: history-worker
-    command: npm run start:worker:prod
+  history-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: history-migrate
     environment:
-      NODE_ENV: production
-      RABBITMQ_URL: ${RABBITMQ_URL}
       DATABASE_URL: ${DATABASE_URL}
+    command: npx prisma migrate dev
+    networks:
+      - postgres-net
+    profiles:
+      - tools
+
+  history-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: history-service
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT}
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE_AUTH: ${RABBITMQ_QUEUE_AUTH}
+      RABBITMQ_QUEUE_VERIFICATION: ${RABBITMQ_QUEUE_VERIFICATION}
+    command: npm run start:dev
+    ports:
+      - "3005:3005"
+    volumes:
+      # Hot reload
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    networks:
+      - postgres-net
+      - rabbitmq-net
+      - nginx-gateway
+    restart: unless-stopped
+
+  history-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: history-worker
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+    command: npm run start:worker
+    volumes:
+      - ./src:/app/src
     networks:
       - rabbitmq-net
       - postgres-net
+    depends_on:
+      - history-service
+    restart: unless-stopped
 
 networks:
   postgres-net:
@@ -34,4 +69,3 @@ networks:
     external: true
   nginx-gateway:
     external: true
-

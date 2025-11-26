@@ -7,28 +7,46 @@ import {
     UseGuards,
     Req,
   } from '@nestjs/common';
-  import { PaymentService } from './payment.service';
-  import {
-    SessionGuard,
-    VerificationGuard,
-  } from '../../common/guards';
-  import { TransferDto } from './dto';
-  import { ApiTags, ApiOperation, ApiCookieAuth, ApiParam, ApiOkResponse } from '@nestjs/swagger';
-  
-  @ApiTags('payment')
-  @Controller('payment')
-  export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) {}
+import { PaymentService } from './payment.service';
+import {
+  SessionGuard,
+  VerificationGuard,
+} from '../../common/guards';
+import { TransferDto } from './dto';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiCookieAuth,
+  ApiParam,
+  ApiOkResponse,
+  ApiBody,
+} from '@nestjs/swagger';
 
-    @Post('transfer')
-    @UseGuards(SessionGuard, VerificationGuard)
-    @ApiCookieAuth('sessionId')
-    @ApiOperation({ summary: 'Transfer money between cards' })
-    @ApiBody({ type: TransferDto })
-    @ApiOkResponse({ description: 'Transfer completed' })
-    async transfer(@Body() dto: TransferDto, @Req() req) {
-        return this.paymentService.transfer(dto, req.user.userId);
-    }
+@ApiTags('payments')
+@Controller('payments')
+export class PaymentController {
+  constructor(private readonly paymentService: PaymentService) {}
+
+  @Post('transfer')
+  @UseGuards(SessionGuard, VerificationGuard)
+  @ApiCookieAuth('sessionId')
+  @ApiOperation({ summary: 'Transfer money between cards' })
+  @ApiBody({
+    description: 'Payload for card-to-card transfer',
+    type: TransferDto,
+    schema: {
+      example: {
+        senderCardNumber: '4111111111111111',
+        receiverCardNumber: '4222222222222222',
+        amount: 500,
+        currency: 'UAH',
+      },
+    },
+  })
+  @ApiOkResponse({ description: 'Transfer completed' })
+  async transfer(@Body() dto: TransferDto, @Req() req) {
+    return this.paymentService.transfer(dto, req.user.userId);
+  }
 
     @Get('history')
     @UseGuards(SessionGuard, VerificationGuard)

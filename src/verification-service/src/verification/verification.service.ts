@@ -2,7 +2,9 @@ import {
   Injectable,
   InternalServerErrorException,
   Inject,
-  ForbiddenException
+  ForbiddenException,
+  ConflictException,
+  HttpException,
 } from '@nestjs/common';
 import { S3Service } from '../s3';
 import { File } from 'multer';
@@ -32,7 +34,7 @@ export class VerificationService {
         },
       });
       if (existing) {
-        throw new InternalServerErrorException('Verification already exists');
+        throw new ConflictException('Verification already exists');
       }
       const fileUrl = await this.s3Service.uploadFile(file);
 
@@ -50,6 +52,10 @@ export class VerificationService {
 
       return { userId, document };
     } catch (error: any) {
+      // Re-throw HTTP exceptions as-is
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -90,5 +96,12 @@ export class VerificationService {
       throw new ForbiddenException('Access denied: not your verification');
     }
     return { id: verification.id, status: verification.status };
+  }
+
+  async getAllVerifications() {
+    const verifications = await this.prisma.document.findMany({
+      orderBy: { uploadedAt: 'desc' },
+    });
+    return verifications;
   }
 }
