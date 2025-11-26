@@ -12,7 +12,19 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({ type: RegisterDto })
+  @ApiBody({
+    description: 'Registration payload',
+    type: RegisterDto,
+    schema: {
+      example: {
+        email: 'user@example.com',
+        phone: '+380931234567',
+        password: 'StrongPassword123',
+        fullName: 'John Doe',
+        dateOfBirth: '1990-01-01',
+      },
+    },
+  })
   @ApiCreatedResponse({ description: 'User registered successfully' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -20,7 +32,16 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login and receive a session cookie or 2FA requirement' })
-  @ApiBody({ type: LoginDto })
+  @ApiBody({
+    description: 'Login payload',
+    type: LoginDto,
+    schema: {
+      example: {
+        phone: '+380931234567',
+        password: 'StrongPassword123',
+      },
+    },
+  })
   @ApiOkResponse({ description: 'Login successful or 2FA required' })
   async login(
     @Body() dto: LoginDto,
