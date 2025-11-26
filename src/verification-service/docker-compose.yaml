@@ -1,33 +1,78 @@
 version: '3.8'
 
 services:
-  verification-service:
-      build: .
-      container_name: verification-service
-      environment:
-        DATABASE_URL: ${DATABASE_URL}
-        RABBITMQ_URL: ${RABBITMQ_URL}
-      working_dir: /app
-      command: npm run start:prod
-      ports:
-        - "3002:3002"
-      networks:
-        - postgres-net
-        - rabbitmq-net
-        - minio-net
-        - nginx-gateway
-  verification-worker:
-    build: .
-    container_name: verification-worker
-    command: npm run start:worker:prod
+  verification-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: verification-migrate
     environment:
-      NODE_ENV: production
-      RABBITMQ_URL: ${RABBITMQ_URL}
       DATABASE_URL: ${DATABASE_URL}
+    command: npx prisma migrate dev
+    networks:
+      - postgres-net
+    profiles:
+      - tools
+
+  verification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: verification-service
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT}
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE_AUTH: ${RABBITMQ_QUEUE_AUTH}
+      RABBITMQ_QUEUE_USER: ${RABBITMQ_QUEUE_USER}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+    command: npm run start:dev
+    ports:
+      - "3002:3002"
+    volumes:
+      # Hot reload
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    networks:
+      - postgres-net
+      - rabbitmq-net
+      - nginx-gateway
+      - minio-net
+    restart: unless-stopped
+
+  verification-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: verification-worker
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+    command: npm run start:worker
+    volumes:
+      - ./src:/app/src
     networks:
       - rabbitmq-net
       - postgres-net
       - minio-net
+    depends_on:
+      - verification-service
+    restart: unless-stopped
 
 networks:
   postgres-net:
@@ -38,4 +83,3 @@ networks:
     external: true
   minio-net:
     external: true
-

@@ -1,38 +1,68 @@
 version: '3.8'
 
 services:
+  auth-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: auth-migrate
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    command: npx prisma migrate dev
+    networks:
+      - postgres-net
+    profiles:
+      - tools
   auth-service:
-      build: .
-      container_name: auth-service
-      environment:
-        DATABASE_URL: ${DATABASE_URL}
-        RABBITMQ_URL: ${RABBITMQ_URL}
-        REDIS_URL: ${REDIS_URL}
-      working_dir: /app
-      command: npm run start:prod
-      ports:
-        - "3000:3000"
-      networks:
-        - postgres-net
-        - rabbitmq-net
-        - redis-net
-        - nginx-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: auth-service
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE_USER: ${RABBITMQ_QUEUE_USER}
+      RABBITMQ_QUEUE_HISTORY: ${RABBITMQ_QUEUE_HISTORY}
+      REDIS_URL: ${REDIS_URL}
+      PORT: ${PORT}
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Hot reload
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    networks:
+      - postgres-net
+      - rabbitmq-net
+      - redis-net
+      - nginx-gateway
+    restart: unless-stopped
   auth-worker:
     build:
       context: .
+      dockerfile: Dockerfile
+      target: development
     container_name: auth-worker
-    command: npm run start:worker:prod
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
       REDIS_URL: ${REDIS_URL}
-    depends_on:
-      - auth-service
+    command: npm run start:worker
+    volumes:
+      - ./src:/app/src
     networks:
       - rabbitmq-net
       - postgres-net
       - redis-net
+    depends_on:
+      - auth-service
+    restart: unless-stopped
       
 networks:
   postgres-net:
