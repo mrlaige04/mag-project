@@ -13,7 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { VerificationService } from './verification.service';
 import { File } from 'multer';
 import { AdminVerifyDto } from './dto';
-import { SessionGuard, AdminRoleGuard } from '../../common/guards';
+import { SessionGuard, AdminRoleGuard } from '@app/common';
 import { ApiTags, ApiOperation, ApiCookieAuth, ApiConsumes, ApiBody, ApiOkResponse } from '@nestjs/swagger';
 
 @ApiTags('verification')

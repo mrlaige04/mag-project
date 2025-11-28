@@ -8,10 +8,7 @@ import {
     Req,
   } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import {
-  SessionGuard,
-  VerificationGuard,
-} from '../../common/guards';
+import { SessionGuard, VerificationGuard } from '@app/common';
 import { TransferDto } from './dto';
 import {
   ApiTags,

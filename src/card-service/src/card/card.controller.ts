@@ -11,10 +11,10 @@ import { CardService } from './card.service';
 import { OpenCardDto } from './dto';
 import {
   SessionGuard,
-  CardOwnerGuard,
   AdminRoleGuard,
   VerificationGuard,
-} from '../../common/guards';
+} from '@app/common';
+import { CardOwnerGuard } from '../../common/guards';
 import { ApiTags, ApiOperation, ApiParam, ApiCookieAuth, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('cards')
