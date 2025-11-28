@@ -66,6 +66,7 @@ services:
     command: npm run start:worker
     volumes:
       - ./src:/app/src
+      - ./common:/app/common
     networks:
       - rabbitmq-net
       - postgres-net

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import { AllRpcExceptionsFilter } from '../common/exceptions';
 
 async function bootstrap() {
   const appContext = await NestFactory.create(AppModule);
@@ -19,6 +20,7 @@ async function bootstrap() {
       },
     });
 
+  microservice.useGlobalFilters(new AllRpcExceptionsFilter());
   await microservice.listen();
   console.log('History worker is listening for RabbitMQ messages...');
 }
