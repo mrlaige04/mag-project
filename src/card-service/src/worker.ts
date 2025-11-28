@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { AllRpcExceptionsFilter } from '../common/exceptions';
+import { RpcExceptionFilter } from '@app/common';
 
 async function bootstrap() {
   const appContext = await NestFactory.create(AppModule);
@@ -20,7 +20,7 @@ async function bootstrap() {
       },
     });
 
-  microservice.useGlobalFilters(new AllRpcExceptionsFilter());
+  microservice.useGlobalFilters(new RpcExceptionFilter());
   await microservice.listen();
   console.log('Card worker is listening for RabbitMQ messages...');
 }
