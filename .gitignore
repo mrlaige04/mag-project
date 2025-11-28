@@ -1,11 +1,6 @@
-./node_modules
-
+node_modules
+dist
 .env
-./dist
-
 .idea
-config/rabbitmq-definitions.json
-
-/src/*/dist/
-/src/*/node_modules
 coverage
+config/rabbitmq-definitions.json
