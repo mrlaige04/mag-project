@@ -29,8 +29,6 @@ export class VerificationGuard implements CanActivate, OnModuleInit {
     const status: any = await firstValueFrom(
         this.verificationClient.send({ cmd: 'get-verification-status' }, userId).pipe(timeout(5000))
     );
-
-    console.log(status);
   
     if (!status || status.status !== 'approved') {
         throw new ForbiddenException('User is not verified');
@@ -39,3 +37,4 @@ export class VerificationGuard implements CanActivate, OnModuleInit {
     
   }
 }
+

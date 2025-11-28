@@ -3,14 +3,14 @@ import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
-import { AllRpcExceptionsFilter } from '../common/exceptions';
+import { RpcExceptionFilter } from '@app/common';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   app.use(cookieParser());
-  app.useGlobalFilters(new AllRpcExceptionsFilter());
+  app.useGlobalFilters(new RpcExceptionFilter());
   app.enableShutdownHooks();
   app.enableCors({
     origin: configService.get<string>('CORS_ORIGIN') || '*',
@@ -26,11 +26,7 @@ async function bootstrap() {
         durable: true,
       },
     },
-  });
-
-  app
-    .getMicroservices()
-    .forEach((ms) => ms.useGlobalFilters(new AllRpcExceptionsFilter()));
+  }, { inheritAppConfig: true });
 
   await app.startAllMicroservices();
 

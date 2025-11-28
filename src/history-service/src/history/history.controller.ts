@@ -1,7 +1,7 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiCookieAuth, ApiOkResponse } from '@nestjs/swagger';
 import { HistoryService } from './history.service';
-import { SessionGuard, VerificationGuard, AdminRoleGuard } from '../../common/guards';
+import { SessionGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
 
 @ApiTags('history')
 @Controller('history')

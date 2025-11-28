@@ -3,7 +3,6 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { UserEventsController } from './user.events';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { SessionGuard, AdminRoleGuard } from '../../common/guards';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
@@ -36,7 +35,7 @@ import { ConfigService } from '@nestjs/config';
     ]),
   ],
   controllers: [UserController, UserEventsController],
-  providers: [UserService, SessionGuard, AdminRoleGuard],
+  providers: [UserService],
   exports: [UserService],
 })
 export class UserModule {}

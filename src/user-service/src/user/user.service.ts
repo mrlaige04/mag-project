@@ -95,9 +95,17 @@ export class UserService {
     if (Object.keys(updateData).length === 0) {
       throw new BadRequestException('No data to update');
     }
-    const user = await this.prisma.user.update({ where: { id }, data: updateData });
-    await this.historyClient.send({ cmd: 'history.log' }, { userId: id, eventType: 'PROFILE_UPDATE', meta: { changedFields } }).toPromise();
-    return user;
+
+    try {
+      const user = await this.prisma.user.update({ where: { id }, data: updateData });
+      await this.historyClient.send({ cmd: 'history.log' }, { userId: id, eventType: 'PROFILE_UPDATE', meta: { changedFields } }).toPromise();
+      return user;
+    } catch (error) {
+      if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+        throw new ConflictException('Email already exists');
+      }
+      throw error;
+    }
   }
 
   async enable2FA(userId: string) {

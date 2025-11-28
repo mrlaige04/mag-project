@@ -21,7 +21,6 @@ export class SessionGuard implements CanActivate, OnModuleInit {
       const session: any = await firstValueFrom(
         this.authClient.send({ cmd: 'validate-session' }, sessionId).pipe(timeout(5000))
       );
-      console.log('session', session);
       if (!session?.valid) throw new UnauthorizedException('Invalid session');
       req['user'] = session;
       return true;
@@ -30,4 +29,5 @@ export class SessionGuard implements CanActivate, OnModuleInit {
       throw new UnauthorizedException('Session validation failed');
     }
   }
-} 
+}
+
