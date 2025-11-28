@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: card-migrate
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
+    env_file:
+      - .env
     command: npx prisma migrate dev
     networks:
       - postgres-net
@@ -21,14 +21,10 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: card-service
+    env_file:
+      - .env
     environment:
       NODE_ENV: development
-      PORT: ${PORT}
-      DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      RABBITMQ_QUEUE_AUTH: ${RABBITMQ_QUEUE_AUTH}
-      RABBITMQ_QUEUE_VERIFICATION: ${RABBITMQ_QUEUE_VERIFICATION}
-      RABBITMQ_QUEUE_HISTORY: ${RABBITMQ_QUEUE_HISTORY}
     command: npm run start:dev
     ports:
       - "3003:3003"
@@ -36,6 +32,8 @@ services:
       # Hot reload
       - ./src:/app/src
       - ./prisma:/app/prisma
+      - ../../libs:/app/libs
+      - ./tsconfig.json:/app/tsconfig.json
     networks:
       - postgres-net
       - rabbitmq-net
@@ -48,15 +46,16 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: card-worker
+    env_file:
+      - .env
     environment:
       NODE_ENV: development
-      DATABASE_URL: ${DATABASE_URL}
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
     command: npm run start:worker
     volumes:
       - ./src:/app/src
       - ./common:/app/common
+      - ../../libs:/app/libs
+      - ./tsconfig.json:/app/tsconfig.json
     networks:
       - rabbitmq-net
       - postgres-net
