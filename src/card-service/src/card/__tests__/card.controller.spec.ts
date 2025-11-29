@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CardController } from '../card.controller';
 import { CardService } from '../card.service';
-import { SessionGuard, CardOwnerGuard, AdminRoleGuard, VerificationGuard } from '../../../common/guards';
+import { SessionGuard, AdminRoleGuard, VerificationGuard } from '@app/common';
+import { CardOwnerGuard } from '../../../common/guards';
 import { PrismaService } from '../../prisma';
 
 describe('CardController', () => {

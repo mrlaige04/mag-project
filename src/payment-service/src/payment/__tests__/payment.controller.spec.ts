@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentController } from '../payment.controller';
 import { PaymentService } from '../payment.service';
-import { SessionGuard, VerificationGuard } from '../../../common/guards';
+import { SessionGuard, VerificationGuard } from '@app/common';
 
 describe('PaymentController', () => {
   let controller: PaymentController;

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HistoryController } from '../history.controller';
 import { HistoryService } from '../history.service';
-import { SessionGuard, VerificationGuard, AdminRoleGuard } from '../../../common/guards';
+import { SessionGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
 
 describe('HistoryController', () => {
   let controller: HistoryController;
