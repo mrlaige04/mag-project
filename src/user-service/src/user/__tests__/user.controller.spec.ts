@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController, UserService } from '../../user';
-import { SessionGuard } from '../../../common/guards';
+import { SessionGuard } from '@app/common';
 
 describe('UserController', () => {
   let controller: UserController;
