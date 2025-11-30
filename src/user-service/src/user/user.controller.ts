@@ -13,7 +13,7 @@ import {
 import { UserService } from './user.service';
 import { UpdateProfileDto } from './dto';
 import { SessionGuard, AdminRoleGuard } from '@app/common';
-import { ApiTags, ApiOperation, ApiParam, ApiCookieAuth, ApiOkResponse, ApiBody, OmitType } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiCookieAuth, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('users')
 @Controller('users')
