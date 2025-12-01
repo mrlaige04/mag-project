@@ -53,7 +53,10 @@ export class AuthController {
     }
     res.cookie('sessionId', result.sessionId, {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'none',
+      secure: true,
+      path: '/',
+      maxAge: 5 * 60 * 1000, // 5 minutes
     });
 
     return { success: true };
@@ -99,7 +102,10 @@ export class AuthController {
 
     res.cookie('sessionId', result.sessionId, {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'none',
+      secure: true,
+      path: '/',
+      maxAge: 5 * 60 * 1000, // 5 minutes
     });
     return { success: true };
   }
@@ -128,7 +134,12 @@ export class AuthController {
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const sessionId = req.cookies?.sessionId;
     await this.authService.logout(sessionId);
-    res.clearCookie('sessionId');
+    res.clearCookie('sessionId', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+      path: '/',
+    });
     return { success: true, sessionIdEnded: sessionId };
   }
 
@@ -143,7 +154,12 @@ export class AuthController {
   ) {
     const userId = req['user'].userId;
     await this.authService.logoutAll(userId);
-    res.clearCookie('sessionId');
+    res.clearCookie('sessionId', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+      path: '/',
+    });
     return { success: true };
   }
 }
