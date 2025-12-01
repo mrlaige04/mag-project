@@ -12,10 +12,14 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useGlobalFilters(new RpcExceptionFilter());
   app.enableShutdownHooks();
-  app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN') || '*',
-    credentials: true,
-  });
+
+  const corsOrigin = configService.get<string>('CORS_ORIGIN');
+  if (corsOrigin) {
+    app.enableCors({
+      origin: corsOrigin.split(',').map((o) => o.trim()),
+      credentials: true,
+    });
+  }
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
