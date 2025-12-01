@@ -4,3 +4,5 @@ dist
 .idea
 coverage
 config/rabbitmq-definitions.json
+config/nginx.conf
+config/nginx-ssl.conf
