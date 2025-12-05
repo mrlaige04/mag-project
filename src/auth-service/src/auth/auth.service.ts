@@ -7,22 +7,59 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { RegisterDto, LoginDto } from './dto';
-import { RedisService } from '../redis';
 import { PrismaService } from '../prisma';
 import { randomUUID } from 'crypto';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 import * as bcrypt from 'bcryptjs';
 import * as speakeasy from 'speakeasy';
-
+import { ConfigService } from '@nestjs/config';
+import * as jwt from 'jsonwebtoken';
 @Injectable()
 export class AuthService {
   constructor(
     @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
-    private readonly redisService: RedisService,
     private readonly prisma: PrismaService,
     @Inject('HISTORY_SERVICE') private readonly historyClient: ClientProxy,
+    private readonly configService: ConfigService,
   ) {}
+
+  private signAccessToken(payload: { userId: string; role: string }) {
+    const secret = this.configService.get<string>('JWT_SECRET');
+    const expiresIn = this.configService.get<string>('JWT_EXPIRES_IN') ?? '5m';
+    const accessToken = jwt.sign(
+      { sub: payload.userId, role: payload.role },
+      secret,
+      { expiresIn },
+    );
+    const decoded = jwt.decode(accessToken) as jwt.JwtPayload;
+    return {
+      accessToken,
+      accessTokenExpiresAt: decoded?.exp
+        ? new Date(decoded.exp * 1000)
+        : null,
+    };
+  }
+
+  private signRefreshToken(payload: { userId: string; role: string }) {
+    const secret =
+      this.configService.get<string>('JWT_REFRESH_SECRET') ||
+      this.configService.get<string>('JWT_SECRET');
+    const expiresIn =
+      this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
+    const refreshToken = jwt.sign(
+      { sub: payload.userId, role: payload.role },
+      secret,
+      { expiresIn },
+    );
+    const decoded = jwt.decode(refreshToken) as jwt.JwtPayload;
+    return {
+      refreshToken,
+      refreshTokenExpiresAt: decoded?.exp
+        ? new Date(decoded.exp * 1000)
+        : null,
+    };
+  }
 
   async register(dto: RegisterDto) {
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -73,13 +110,25 @@ export class AuthService {
       return { require2fa: true };
     }
 
-    const sessionId = randomUUID();
-    await this.redisService.setSession(sessionId, {
+    const { accessToken, accessTokenExpiresAt } = this.signAccessToken({
       userId: user.id,
       role: user.role,
     });
-    await this.historyClient.send({ cmd: 'history.log' }, { userId: user.id, eventType: 'LOGIN', meta: { phone: user.phone } }).toPromise();
-    return { sessionId };
+    const { refreshToken, refreshTokenExpiresAt } = this.signRefreshToken({
+      userId: user.id,
+      role: user.role,
+    });
+
+    await this.historyClient.send(
+      { cmd: 'history.log' },
+      { userId: user.id, eventType: 'LOGIN', meta: { phone: user.phone } },
+    ).toPromise();
+    return {
+      accessToken,
+      accessTokenExpiresAt,
+      refreshToken,
+      refreshTokenExpiresAt,
+    };
   }
 
   // --- 2FA ---
@@ -136,9 +185,26 @@ export class AuthService {
     );
     if (!user) throw new UnauthorizedException('User not found');
 
-    const sessionId = randomUUID();
-    await this.redisService.setSession(sessionId, { userId, role: user.role });
-    return { sessionId };
+    const { accessToken, accessTokenExpiresAt } = this.signAccessToken({
+      userId,
+      role: user.role,
+    });
+    const { refreshToken, refreshTokenExpiresAt } = this.signRefreshToken({
+      userId,
+      role: user.role,
+    });
+
+    await this.historyClient.send(
+      { cmd: 'history.log' },
+      { userId, eventType: 'LOGIN', meta: { phone: user.phone } },
+    ).toPromise();
+
+    return {
+      accessToken,
+      accessTokenExpiresAt,
+      refreshToken,
+      refreshTokenExpiresAt,
+    };
   }
 
   async disable2fa(userId: string) {
@@ -190,22 +256,71 @@ export class AuthService {
     return { success: true };
   }
 
-  async logout(sessionId: string) {
-    if (!sessionId) throw new BadRequestException('No sessionId provided');
-    await this.redisService.deleteSession(sessionId);
-    const session = await this.redisService.getSession(sessionId);
-    await this.historyClient.send({ cmd: 'history.log' }, { userId: session.userId, eventType: 'LOGOUT', meta: {} }).toPromise();
+  // --- Refresh tokens ---
+  async refreshTokens(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
+    try {
+      const secret =
+        this.configService.get<string>('JWT_REFRESH_SECRET') ||
+        this.configService.get<string>('JWT_SECRET');
+      const payload = jwt.verify(refreshToken, secret) as {
+        sub: string;
+        role?: string;
+      };
+
+      const user = await firstValueFrom(
+        this.userClient
+          .send({ cmd: 'find-user' }, { id: payload.sub })
+          .pipe(timeout(3000)),
+      );
+      if (!user) throw new UnauthorizedException('User not found');
+
+      const { accessToken, accessTokenExpiresAt } = this.signAccessToken({
+        userId: user.id,
+        role: user.role,
+      });
+      const {
+        refreshToken: newRefreshToken,
+        refreshTokenExpiresAt,
+      } = this.signRefreshToken({
+        userId: user.id,
+        role: user.role,
+      });
+
+      return {
+        accessToken,
+        accessTokenExpiresAt,
+        refreshToken: newRefreshToken,
+        refreshTokenExpiresAt,
+      };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  // --- Stateless logout (JWT) ---
+  async logout(userId: string) {
+    if (!userId) throw new BadRequestException('No userId provided');
+    await this.historyClient
+      .send(
+        { cmd: 'history.log' },
+        { userId, eventType: 'LOGOUT', meta: {} },
+      )
+      .toPromise();
     return { success: true };
   }
 
   async logoutAll(userId: string) {
-    const sessions = await this.redisService.getSessionsByUserId(userId);
-
-    if (!sessions || sessions.length === 0) {
-      return { success: true, message: 'No sessions found for this user' };
-    }
-
-    await this.redisService.deleteAllUserSessions(userId);
+    if (!userId) throw new BadRequestException('No userId provided');
+    await this.historyClient
+      .send(
+        { cmd: 'history.log' },
+        { userId, eventType: 'LOGOUT_ALL', meta: {} },
+      )
+      .toPromise();
     return { success: true };
   }
 }
