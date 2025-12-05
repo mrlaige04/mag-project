@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentController } from '../payment.controller';
 import { PaymentService } from '../payment.service';
-import { SessionGuard, VerificationGuard } from '@app/common';
+import { JwtGuard, VerificationGuard } from '@app/common';
 
 describe('PaymentController', () => {
   let controller: PaymentController;
@@ -18,7 +18,7 @@ describe('PaymentController', () => {
       controllers: [PaymentController],
       providers: [
         { provide: PaymentService, useValue: mockPaymentService },
-        { provide: SessionGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
+        { provide: JwtGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: VerificationGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: 'AUTH_SERVICE', useValue: { send: jest.fn() } },
         { provide: 'VERIFICATION_SERVICE', useValue: { send: jest.fn() } },

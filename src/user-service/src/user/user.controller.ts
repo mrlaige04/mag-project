@@ -10,26 +10,26 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateProfileDto } from './dto';
-import { SessionGuard, AdminRoleGuard } from '@app/common';
-import { ApiTags, ApiOperation, ApiParam, ApiCookieAuth, ApiOkResponse, ApiBody } from '@nestjs/swagger';
+import { JwtGuard, AdminRoleGuard } from '@app/common';
+import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(SessionGuard, AdminRoleGuard)
+  @UseGuards(JwtGuard, AdminRoleGuard)
   @Get()
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users (admin only)' })
   @ApiOkResponse({ description: 'All users returned' })
   async getAll() {
     return this.userService.findAll();
   }
 
-  @UseGuards(SessionGuard, AdminRoleGuard)
+  @UseGuards(JwtGuard, AdminRoleGuard)
   @Get(':id')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by id (admin only)' })
   @ApiParam({ name: 'id', type: String })
   @ApiOkResponse({ description: 'User returned' })
@@ -37,9 +37,9 @@ export class UserController {
     return this.userService.findById(id);
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(JwtGuard)
   @Delete(':id')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete user by id' })
   @ApiParam({ name: 'id', type: String })
   @ApiOkResponse({ description: 'User deleted' })
@@ -47,9 +47,9 @@ export class UserController {
     return this.userService.delete(id);
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(JwtGuard)
   @Patch(':id')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update profile for user id' })
   @ApiParam({ name: 'id', type: String })
   @ApiBody({ type: UpdateProfileDto })

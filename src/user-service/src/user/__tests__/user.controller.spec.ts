@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController, UserService } from '../../user';
-import { SessionGuard } from '@app/common';
+import { JwtGuard } from '@app/common';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -17,7 +17,7 @@ describe('UserController', () => {
       controllers: [UserController],
       providers: [{ provide: UserService, useValue: mockedUserService }],
     })
-    .overrideGuard(SessionGuard)
+    .overrideGuard(JwtGuard)
     .useValue({ canActivate: jest.fn().mockReturnValue(true) })
     .compile();
 

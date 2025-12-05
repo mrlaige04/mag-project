@@ -1,16 +1,16 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiCookieAuth, ApiOkResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { HistoryService } from './history.service';
-import { SessionGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
+import { JwtGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
 
 @ApiTags('history')
 @Controller('history')
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 
-  @UseGuards(SessionGuard, VerificationGuard, AdminRoleGuard)
+  @UseGuards(JwtGuard, VerificationGuard, AdminRoleGuard)
   @Get('user/:userId')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get events for a specific user (admin)' })
   @ApiParam({ name: 'userId', type: String })
   @ApiOkResponse({ description: 'User events returned' })
@@ -18,9 +18,9 @@ export class HistoryController {
     return this.historyService.getUserEvents(userId);
   }
 
-  @UseGuards(SessionGuard, VerificationGuard, AdminRoleGuard)
+  @UseGuards(JwtGuard, VerificationGuard, AdminRoleGuard)
   @Get('all')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all events (admin)' })
   @ApiOkResponse({ description: 'All events returned' })
   async getAllEvents() {

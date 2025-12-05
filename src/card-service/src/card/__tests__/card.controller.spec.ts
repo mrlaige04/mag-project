@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CardController } from '../card.controller';
 import { CardService } from '../card.service';
-import { SessionGuard, AdminRoleGuard, VerificationGuard } from '@app/common';
+import { JwtGuard, AdminRoleGuard, VerificationGuard } from '@app/common';
 import { CardOwnerGuard } from '../../../common/guards';
 import { PrismaService } from '../../prisma';
 
@@ -25,7 +25,7 @@ describe('CardController', () => {
       controllers: [CardController],
       providers: [
         { provide: CardService, useValue: mockCardService },
-        { provide: SessionGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
+        { provide: JwtGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: CardOwnerGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: AdminRoleGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: VerificationGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },

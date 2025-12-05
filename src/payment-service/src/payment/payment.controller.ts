@@ -8,12 +8,12 @@ import {
     Req,
   } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { SessionGuard, VerificationGuard } from '@app/common';
+import { JwtGuard, VerificationGuard } from '@app/common';
 import { TransferDto } from './dto';
 import {
   ApiTags,
   ApiOperation,
-  ApiCookieAuth,
+  ApiBearerAuth,
   ApiParam,
   ApiOkResponse,
   ApiBody,
@@ -25,8 +25,8 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post('transfer')
-  @UseGuards(SessionGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Transfer money between cards' })
   @ApiBody({
     description: 'Payload for card-to-card transfer',
@@ -46,8 +46,8 @@ export class PaymentController {
   }
 
     @Get('history')
-    @UseGuards(SessionGuard, VerificationGuard)
-    @ApiCookieAuth('sessionId')
+    @UseGuards(JwtGuard, VerificationGuard)
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Get payment history for current user' })
     @ApiOkResponse({ description: 'History returned' })
     async getHistory(@Req() req) {
@@ -55,8 +55,8 @@ export class PaymentController {
     }
 
     @Get(':id')
-    @UseGuards(SessionGuard, VerificationGuard)
-    @ApiCookieAuth('sessionId')
+    @UseGuards(JwtGuard, VerificationGuard)
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Get payment by id' })
     @ApiParam({ name: 'id', type: String })
     @ApiOkResponse({ description: 'Payment returned' })

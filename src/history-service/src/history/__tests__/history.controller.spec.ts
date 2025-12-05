@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HistoryController } from '../history.controller';
 import { HistoryService } from '../history.service';
-import { SessionGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
+import { JwtGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
 
 describe('HistoryController', () => {
   let controller: HistoryController;
@@ -16,7 +16,7 @@ describe('HistoryController', () => {
       controllers: [HistoryController],
       providers: [
         { provide: HistoryService, useValue: mockHistoryService },
-        { provide: SessionGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
+        { provide: JwtGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: VerificationGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: AdminRoleGuard, useValue: { canActivate: jest.fn().mockReturnValue(true) } },
         { provide: 'AUTH_SERVICE', useValue: { send: jest.fn() } },

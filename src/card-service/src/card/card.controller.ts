@@ -10,12 +10,12 @@ import {
 import { CardService } from './card.service';
 import { OpenCardDto } from './dto';
 import {
-  SessionGuard,
+  JwtGuard,
   AdminRoleGuard,
   VerificationGuard,
 } from '@app/common';
 import { CardOwnerGuard } from '../../common/guards';
-import { ApiTags, ApiOperation, ApiParam, ApiCookieAuth, ApiOkResponse, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiOkResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('cards')
 @Controller('cards')
@@ -23,8 +23,8 @@ export class CardController {
   constructor(private readonly cardService: CardService) {}
 
   @Post('open')
-  @UseGuards(SessionGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Open a new card application' })
   @ApiBody({
     description: 'Payload for opening a new card application',
@@ -43,8 +43,8 @@ export class CardController {
   }
 
   @Post(':id/block')
-  @UseGuards(SessionGuard, CardOwnerGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Block a card by id' })
   @ApiParam({ name: 'id', type: String })
   @ApiOkResponse({ description: 'Card blocked' })
@@ -53,8 +53,8 @@ export class CardController {
   }
 
   @Post(':id/unblock')
-  @UseGuards(SessionGuard, CardOwnerGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Unblock a card by id' })
   @ApiParam({ name: 'id', type: String })
   @ApiOkResponse({ description: 'Card unblocked' })
@@ -63,8 +63,8 @@ export class CardController {
   }
 
   @Post(':id/close')
-  @UseGuards(SessionGuard, CardOwnerGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Close a card by id' })
   @ApiParam({ name: 'id', type: String })
   @ApiOkResponse({ description: 'Card closed' })
@@ -73,8 +73,8 @@ export class CardController {
   }
 
   @Get()
-  @UseGuards(SessionGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all cards for current user' })
   @ApiOkResponse({ description: 'Cards returned' })
   async getAllByUser(@Req() req) {
@@ -82,8 +82,8 @@ export class CardController {
   }
 
   @Get('applications')
-  @UseGuards(SessionGuard, AdminRoleGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, AdminRoleGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all card applications (admin)' })
   @ApiOkResponse({ description: 'Applications returned' })
   async getApplications() {
@@ -91,8 +91,8 @@ export class CardController {
   }
 
   @Get(':id')
-  @UseGuards(SessionGuard, CardOwnerGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get card by id' })
   @ApiParam({ name: 'id', type: String })
   @ApiOkResponse({ description: 'Card returned' })
@@ -101,8 +101,8 @@ export class CardController {
   }
 
   @Post('applications/:id/approve')
-  @UseGuards(SessionGuard, AdminRoleGuard, VerificationGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, AdminRoleGuard, VerificationGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Approve card application (admin)' })
   @ApiParam({ name: 'id', type: String })
   @ApiOkResponse({ description: 'Application approved' })
