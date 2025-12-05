@@ -1,9 +1,9 @@
-import { Controller, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiTags, ApiOperation, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiCookieAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterDto, LoginDto } from './dto';
-import { Request, Response } from 'express';
-import { SessionGuard } from '../../common/guards';
+import { Request } from 'express';
+import { JwtGuard } from '@app/common';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -31,7 +31,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login and receive a session cookie or 2FA requirement' })
+  @ApiOperation({ summary: 'Login and receive JWT access/refresh tokens or 2FA requirement' })
   @ApiBody({
     description: 'Login payload',
     type: LoginDto,
@@ -42,38 +42,23 @@ export class AuthController {
       },
     },
   })
-  @ApiOkResponse({ description: 'Login successful or 2FA required' })
-  async login(
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const result = await this.authService.login(dto);
-    if (result.require2fa) {
-      return result;
-    }
-    res.cookie('sessionId', result.sessionId, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      path: '/',
-      maxAge: 5 * 60 * 1000, // 5 minutes
-    });
-
-    return { success: true };
+  @ApiOkResponse({ description: 'Login successful (returns accessToken & refreshToken with expiration times) or 2FA required' })
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(JwtGuard)
   @Post('2fa/setup')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Generate 2FA secret and QR for the logged-in user' })
   @ApiOkResponse({ description: '2FA setup info returned' })
   async setup2fa(@Req() req: Request) {
     return this.authService.setup2fa(req['user'].userId);
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(JwtGuard)
   @Post('2fa/enable')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Enable 2FA for the logged-in user' })
   @ApiBody({ schema: { properties: { code: { type: 'string' } }, required: ['code'] } })
   @ApiOkResponse({ description: '2FA enabled' })
@@ -81,9 +66,9 @@ export class AuthController {
     return this.authService.enable2fa(req['user'].userId, body.code);
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(JwtGuard)
   @Post('2fa/disable')
-  @ApiCookieAuth('sessionId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Disable 2FA for the logged-in user' })
   @ApiOkResponse({ description: '2FA disabled' })
   async disable2fa(@Req() req: Request) {
@@ -91,23 +76,26 @@ export class AuthController {
   }
 
   @Post('2fa/verify')
-  @ApiOperation({ summary: 'Verify 2FA code during login and set session cookie' })
+  @ApiOperation({ summary: 'Verify 2FA code during login and receive JWT access/refresh tokens' })
   @ApiBody({ schema: { properties: { userId: { type: 'string' }, code: { type: 'string' } }, required: ['userId', 'code'] } })
-  @ApiOkResponse({ description: '2FA verified and session cookie set' })
-  async verify2fa(
-    @Body() body: { userId: string; code: string },
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const result = await this.authService.verify2fa(body.userId, body.code);
+  @ApiOkResponse({ description: '2FA verified and JWT access/refresh tokens returned' })
+  async verify2fa(@Body() body: { userId: string; code: string }) {
+    return this.authService.verify2fa(body.userId, body.code);
+  }
 
-    res.cookie('sessionId', result.sessionId, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      path: '/',
-      maxAge: 5 * 60 * 1000, // 5 minutes
-    });
-    return { success: true };
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access and refresh tokens using refresh token' })
+  @ApiBody({
+    schema: {
+      properties: {
+        refreshToken: { type: 'string' },
+      },
+      required: ['refreshToken'],
+    },
+  })
+  @ApiOkResponse({ description: 'New access and refresh tokens returned' })
+  async refresh(@Body() body: { refreshToken: string }) {
+    return this.authService.refreshTokens(body.refreshToken);
   }
 
   @Post('password-reset/request')
@@ -126,40 +114,23 @@ export class AuthController {
     return this.authService.resetPassword(body.token, body.newPassword);
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(JwtGuard)
   @Post('logout')
-  @ApiCookieAuth('sessionId')
-  @ApiOperation({ summary: 'Logout current session' })
-  @ApiOkResponse({ description: 'Session terminated' })
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const sessionId = req.cookies?.sessionId;
-    await this.authService.logout(sessionId);
-    res.clearCookie('sessionId', {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      path: '/',
-    });
-    return { success: true, sessionIdEnded: sessionId };
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout current JWT session (client should forget token)' })
+  @ApiOkResponse({ description: 'Logout event logged' })
+  async logout(@Req() req: Request) {
+    const userId = (req as any).user?.userId || (req as any).user?.id;
+    return this.authService.logout(userId);
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(JwtGuard)
   @Post('logout-all')
-  @ApiCookieAuth('sessionId')
-  @ApiOperation({ summary: 'Logout all sessions for current user' })
-  @ApiOkResponse({ description: 'All sessions terminated' })
-  async logout_all(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const userId = req['user'].userId;
-    await this.authService.logoutAll(userId);
-    res.clearCookie('sessionId', {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      path: '/',
-    });
-    return { success: true };
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout all sessions for current user (stateless JWT)' })
+  @ApiOkResponse({ description: 'Logout-all event logged' })
+  async logoutAll(@Req() req: Request) {
+    const userId = (req as any).user?.userId || (req as any).user?.id;
+    return this.authService.logoutAll(userId);
   }
 }
