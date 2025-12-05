@@ -2,7 +2,6 @@ import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { RedisService } from '../redis';
-import { SessionGuard } from '../../common/guards';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AuthEventsController } from './auth.events';
 import { ConfigService } from '@nestjs/config';
@@ -37,7 +36,7 @@ import { ConfigService } from '@nestjs/config';
     ]),
   ],
   controllers: [AuthController, AuthEventsController],
-  providers: [AuthService, RedisService, SessionGuard],
+  providers: [AuthService, RedisService],
   exports: [AuthService],
 })
 export class AuthModule {
