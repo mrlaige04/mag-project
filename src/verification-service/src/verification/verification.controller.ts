@@ -13,8 +13,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { VerificationService } from './verification.service';
 import { File } from 'multer';
 import { AdminVerifyDto } from './dto';
-import { SessionGuard, AdminRoleGuard } from '@app/common';
-import { ApiTags, ApiOperation, ApiCookieAuth, ApiConsumes, ApiBody, ApiOkResponse } from '@nestjs/swagger';
+import { JwtGuard, AdminRoleGuard } from '@app/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiOkResponse } from '@nestjs/swagger';
 
 @ApiTags('verification')
 @Controller('verification')
@@ -23,8 +23,8 @@ export class VerificationController {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  @UseGuards(SessionGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload ID document for verification' })
   @ApiBody({
@@ -69,8 +69,8 @@ export class VerificationController {
   }
 
   @Post('verify')
-  @UseGuards(SessionGuard, AdminRoleGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, AdminRoleGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Admin verifies a document by id' })
   @ApiBody({
     description: 'Admin verification action',
@@ -92,8 +92,8 @@ export class VerificationController {
   }
 
   @Get('/check-verification')
-  @UseGuards(SessionGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user verification status' })
   @ApiOkResponse({ description: 'Verification status returned' })
   async getVerification(@Req() req) {
@@ -102,8 +102,8 @@ export class VerificationController {
   }
 
   @Get('/all')
-  @UseGuards(SessionGuard, AdminRoleGuard)
-  @ApiCookieAuth('sessionId')
+  @UseGuards(JwtGuard, AdminRoleGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all verifications (admin only)' })
   @ApiOkResponse({ description: 'All verifications returned' })
   async getAllVerifications() {

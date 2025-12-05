@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { VerificationController, VerificationService } from '../../verification';
+import { JwtGuard, AdminRoleGuard } from '@app/common';
 
 describe('VerificationController', () => {
   let controller: VerificationController;
@@ -18,7 +19,12 @@ describe('VerificationController', () => {
         { provide: VerificationService, useValue: service },
         { provide: 'AUTH_SERVICE', useValue: {} },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .overrideGuard(AdminRoleGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .compile();
 
     controller = module.get<VerificationController>(VerificationController);
   });
