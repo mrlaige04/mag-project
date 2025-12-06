@@ -40,7 +40,7 @@ async function bootstrap() {
     .setTitle('Auth Service')
     .setDescription('Auth service API')
     .setVersion('1.0.0')
-    .addCookieAuth('sessionId')
+    .addBearerAuth()
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('auth/docs', app, swaggerDocument, {

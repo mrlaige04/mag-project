@@ -40,7 +40,7 @@ async function bootstrap() {
     .setTitle('History Service')
     .setDescription('History service API')
     .setVersion('1.0.0')
-    .addCookieAuth('sessionId')
+    .addBearerAuth()
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('history/docs', app, swaggerDocument, {
