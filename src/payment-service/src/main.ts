@@ -43,7 +43,7 @@ async function bootstrap() {
     .addCookieAuth('sessionId')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('payment/docs', app, swaggerDocument, {
+  SwaggerModule.setup('payments/docs', app, swaggerDocument, {
     swaggerOptions: {
       persistAuthorization: true,
       requestInterceptor: (req) => {
