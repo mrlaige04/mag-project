@@ -146,10 +146,10 @@ describe('AuthController', () => {
   });
 
   it('should return require2fa if needed (login)', async () => {
-    (service.login as any).mockResolvedValue({ require2fa: true });
+    (service.login as any).mockResolvedValue({ require2fa: true, userId: '1' });
     const dto = { phone: 'b', password: 'c' } as any;
     const result = await controller.login(dto);
-    expect(result).toEqual({ require2fa: true });
+    expect(result).toEqual({ require2fa: true, userId: '1' });
   });
 
   it('should handle enable2fa with no userId', async () => {

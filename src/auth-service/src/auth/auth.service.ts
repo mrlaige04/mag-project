@@ -107,7 +107,7 @@ export class AuthService {
       where: { userId: user.id, enabled: true },
     });
     if (tfa) {
-      return { require2fa: true };
+      return { require2fa: true, userId: user.id };
     }
 
     const { accessToken, accessTokenExpiresAt } = this.signAccessToken({
