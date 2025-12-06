@@ -75,41 +75,11 @@ export class CardService {
   }
 
   async createCardApplication(userId: string, dto: OpenCardDto) {
-    return this.prisma.cardApplication.create({
-      data: {
-        userId,
-        cardType: dto.cardType,
-        provider: dto.provider,
-        status: 'pending',
-      },
-    });
+    return this.openCard(userId, dto);
   }
 
   async getAllApplications() {
     return this.prisma.cardApplication.findMany();
-  }
-
-  async approveApplication(id: string) {
-    const application = await this.prisma.cardApplication.findUnique({
-      where: { id },
-    });
-    if (!application) throw new Error('Application not found');
-
-    if (application.status === 'approved') {
-      return { message: 'Application already approved' };
-    }
-
-    const updated = await this.prisma.cardApplication.update({
-      where: { id },
-      data: { status: 'approved', processedAt: new Date() },
-    });
-
-    const card = await this.openCard(updated.userId, {
-      cardType: updated.cardType,
-      provider: updated.provider,
-    });
-    await this.historyClient.send({ cmd: 'history.log' }, { userId: updated.userId, eventType: 'ADMIN_ACTION', meta: { action: 'card.application.approve', applicationId: id } }).toPromise();
-    return card;
   }
 
   async transfer(senderCardId: string, receiverCardId: string, amount: number, currency: string) {

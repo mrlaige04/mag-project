@@ -87,16 +87,6 @@ export class CardController {
     return this.cardService.findAllByUser(req.user.userId);
   }
 
-  @Get('applications')
-  @UseGuards(JwtGuard, AdminRoleGuard, VerificationGuard)
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all card applications (admin)' })
-  @ApiOkResponse({ description: 'Applications returned' })
-  async getApplications() {
-    return this.cardService.getAllApplications();
-  }
-
   @Get(':id')
   @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
   @HttpCode(200)
@@ -106,16 +96,5 @@ export class CardController {
   @ApiOkResponse({ description: 'Card returned' })
   async getOne(@Param('id') cardId: string) {
     return this.cardService.findOne(cardId);
-  }
-
-  @Post('applications/:id/approve')
-  @UseGuards(JwtGuard, AdminRoleGuard, VerificationGuard)
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Approve card application (admin)' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiOkResponse({ description: 'Application approved' })
-  async approveApplication(@Param('id') id: string) {
-    return this.cardService.approveApplication(id);
   }
 }
