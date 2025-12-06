@@ -7,7 +7,8 @@ import {
   BadRequestException,
   UseGuards,
   Req,
-  Get
+  Get,
+  HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { VerificationService } from './verification.service';
@@ -24,6 +25,7 @@ export class VerificationController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(JwtGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload ID document for verification' })
@@ -70,6 +72,7 @@ export class VerificationController {
 
   @Post('verify')
   @UseGuards(JwtGuard, AdminRoleGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Admin verifies a document by id' })
   @ApiBody({
@@ -93,6 +96,7 @@ export class VerificationController {
 
   @Get('/check-verification')
   @UseGuards(JwtGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user verification status' })
   @ApiOkResponse({ description: 'Verification status returned' })
@@ -103,6 +107,7 @@ export class VerificationController {
 
   @Get('/all')
   @UseGuards(JwtGuard, AdminRoleGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all verifications (admin only)' })
   @ApiOkResponse({ description: 'All verifications returned' })

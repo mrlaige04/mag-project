@@ -6,6 +6,7 @@ import {
     Param,
     UseGuards,
     Req,
+    HttpCode,
   } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { JwtGuard, VerificationGuard } from '@app/common';
@@ -26,6 +27,7 @@ export class PaymentController {
 
   @Post('transfer')
   @UseGuards(JwtGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Transfer money between cards' })
   @ApiBody({
@@ -47,6 +49,7 @@ export class PaymentController {
 
     @Get('history')
     @UseGuards(JwtGuard, VerificationGuard)
+    @HttpCode(200)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Get payment history for current user' })
     @ApiOkResponse({ description: 'History returned' })
@@ -56,6 +59,7 @@ export class PaymentController {
 
     @Get(':id')
     @UseGuards(JwtGuard, VerificationGuard)
+    @HttpCode(200)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Get payment by id' })
     @ApiParam({ name: 'id', type: String })

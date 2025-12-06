@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Req,
+  HttpCode,
 } from '@nestjs/common';
 import { CardService } from './card.service';
 import { OpenCardDto } from './dto';
@@ -24,6 +25,7 @@ export class CardController {
 
   @Post('open')
   @UseGuards(JwtGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Open a new card application' })
   @ApiBody({
@@ -44,6 +46,7 @@ export class CardController {
 
   @Post(':id/block')
   @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Block a card by id' })
   @ApiParam({ name: 'id', type: String })
@@ -54,6 +57,7 @@ export class CardController {
 
   @Post(':id/unblock')
   @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Unblock a card by id' })
   @ApiParam({ name: 'id', type: String })
@@ -64,6 +68,7 @@ export class CardController {
 
   @Post(':id/close')
   @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Close a card by id' })
   @ApiParam({ name: 'id', type: String })
@@ -74,6 +79,7 @@ export class CardController {
 
   @Get()
   @UseGuards(JwtGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all cards for current user' })
   @ApiOkResponse({ description: 'Cards returned' })
@@ -83,6 +89,7 @@ export class CardController {
 
   @Get('applications')
   @UseGuards(JwtGuard, AdminRoleGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all card applications (admin)' })
   @ApiOkResponse({ description: 'Applications returned' })
@@ -92,6 +99,7 @@ export class CardController {
 
   @Get(':id')
   @UseGuards(JwtGuard, CardOwnerGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get card by id' })
   @ApiParam({ name: 'id', type: String })
@@ -102,6 +110,7 @@ export class CardController {
 
   @Post('applications/:id/approve')
   @UseGuards(JwtGuard, AdminRoleGuard, VerificationGuard)
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Approve card application (admin)' })
   @ApiParam({ name: 'id', type: String })

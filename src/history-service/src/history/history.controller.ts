@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { HistoryService } from './history.service';
 import { JwtGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
@@ -10,6 +10,7 @@ export class HistoryController {
 
   @UseGuards(JwtGuard, VerificationGuard, AdminRoleGuard)
   @Get('user/:userId')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get events for a specific user (admin)' })
   @ApiParam({ name: 'userId', type: String })
@@ -20,6 +21,7 @@ export class HistoryController {
 
   @UseGuards(JwtGuard, VerificationGuard, AdminRoleGuard)
   @Get('all')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all events (admin)' })
   @ApiOkResponse({ description: 'All events returned' })

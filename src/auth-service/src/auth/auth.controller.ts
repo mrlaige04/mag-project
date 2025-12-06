@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Req, UseGuards, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RegisterDto, LoginDto } from './dto';
@@ -11,6 +11,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @HttpCode(201)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({
     description: 'Registration payload',
@@ -31,6 +32,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Login and receive JWT access/refresh tokens or 2FA requirement' })
   @ApiBody({
     description: 'Login payload',
@@ -49,6 +51,7 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Post('2fa/setup')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Generate 2FA secret and QR for the logged-in user' })
   @ApiOkResponse({ description: '2FA setup info returned' })
@@ -58,6 +61,7 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Post('2fa/enable')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Enable 2FA for the logged-in user' })
   @ApiBody({ schema: { properties: { code: { type: 'string' } }, required: ['code'] } })
@@ -68,6 +72,7 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Post('2fa/disable')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Disable 2FA for the logged-in user' })
   @ApiOkResponse({ description: '2FA disabled' })
@@ -76,6 +81,7 @@ export class AuthController {
   }
 
   @Post('2fa/verify')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Verify 2FA code during login and receive JWT access/refresh tokens' })
   @ApiBody({ schema: { properties: { userId: { type: 'string' }, code: { type: 'string' } }, required: ['userId', 'code'] } })
   @ApiOkResponse({ description: '2FA verified and JWT access/refresh tokens returned' })
@@ -84,6 +90,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Refresh access and refresh tokens using refresh token' })
   @ApiBody({
     schema: {
@@ -99,6 +106,7 @@ export class AuthController {
   }
 
   @Post('password-reset/request')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Request password reset email' })
   @ApiBody({ schema: { properties: { email: { type: 'string', format: 'email' } }, required: ['email'] } })
   @ApiOkResponse({ description: 'Reset email sent if account exists' })
@@ -107,6 +115,7 @@ export class AuthController {
   }
 
   @Post('password-reset/confirm')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Confirm password reset with token' })
   @ApiBody({ schema: { properties: { token: { type: 'string' }, newPassword: { type: 'string', minLength: 6 } }, required: ['token', 'newPassword'] } })
   @ApiOkResponse({ description: 'Password reset successful' })
@@ -116,6 +125,7 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Post('logout')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout current JWT session (client should forget token)' })
   @ApiOkResponse({ description: 'Logout event logged' })
@@ -126,6 +136,7 @@ export class AuthController {
 
   @UseGuards(JwtGuard)
   @Post('logout-all')
+  @HttpCode(200)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout all sessions for current user (stateless JWT)' })
   @ApiOkResponse({ description: 'Logout-all event logged' })
