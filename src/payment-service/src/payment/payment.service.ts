@@ -32,12 +32,15 @@ export class PaymentService {
     let transferResult;
     try {
       transferResult = await firstValueFrom(
-        this.cardClient.send({ cmd: 'transfer' }, {
-          senderCardId: senderCard.id,
-          receiverCardId: receiverCard.id,
-          amount: dto.amount,
-          currency: dto.currency,
-        }),
+        this.cardClient.send(
+          { cmd: 'transfer' },
+          {
+            senderCardId: senderCard.id,
+            receiverCardId: receiverCard.id,
+            amount: dto.amount,
+            currency: dto.currency,
+          },
+        ),
       );
     } catch (e) {
       await this.historyClient.send({ cmd: 'history.log' }, { userId, eventType: 'ADMIN_ACTION', meta: { action: 'payment.transfer.failed', error: e.message, dto } }).toPromise();
@@ -45,12 +48,14 @@ export class PaymentService {
     }
     const transfer = await this.prisma.transfer.create({
       data: {
-        senderCardId: senderCard.id,
-        receiverCardId: receiverCard.id,
+        senderCardNumber: senderCard.cardNumber,
+        receiverCardNumber: receiverCard.cardNumber,
         amount: dto.amount,
         currency: dto.currency,
         status: transferResult.success ? 'completed' : 'failed',
-        comment: transferResult.success ? null : (transferResult.error || 'Unknown error'),
+        comment: transferResult.success
+          ? null
+          : transferResult.error || 'Unknown error',
         completedAt: transferResult.success ? new Date() : null,
       },
     });
@@ -60,76 +65,124 @@ export class PaymentService {
 
   async getHistory(userId: string) {
     const cards = await firstValueFrom(
-      this.cardClient.send({ cmd: 'get-cards-by-user' }, userId)
+      this.cardClient.send({ cmd: 'get-cards-by-user' }, userId),
     );
     if (!Array.isArray(cards) || cards.length === 0) {
       return [];
     }
-    const cardIds = cards.map(card => card.id);
+    const cardNumbers = cards.map((card) => card.cardNumber);
 
     const transfers = await this.prisma.transfer.findMany({
       where: {
         OR: [
-          { senderCardId: { in: cardIds } },
-          { receiverCardId: { in: cardIds } },
+          { senderCardNumber: { in: cardNumbers } },
+          { receiverCardNumber: { in: cardNumbers } },
         ],
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    await this.historyClient.send({ cmd: 'history.log' }, { userId, eventType: 'ADMIN_ACTION', meta: { action: 'payment.history' } }).toPromise();
+    await this.historyClient
+      .send(
+        { cmd: 'history.log' },
+        { userId, eventType: 'ADMIN_ACTION', meta: { action: 'payment.history' } },
+      )
+      .toPromise();
 
     return transfers
-      .map(tr => {
+      .map((tr) => {
         let type: 'incoming' | 'outgoing';
-        let cardId: string;
-        if (cardIds.includes(tr.senderCardId)) {
+        let cardNumber: string;
+        if (cardNumbers.includes(tr.senderCardNumber)) {
           type = 'outgoing';
-          cardId = tr.senderCardId;
+          cardNumber = tr.senderCardNumber;
         } else {
           type = 'incoming';
-          cardId = tr.receiverCardId;
+          cardNumber = tr.receiverCardNumber;
         }
         return {
           ...tr,
           type,
-          cardId,
+          cardNumber,
         };
       })
-      .filter(tr =>
-        (tr.type === 'outgoing' && cardIds.includes(tr.senderCardId)) ||
-        (tr.type === 'incoming' && tr.status === 'completed' && cardIds.includes(tr.receiverCardId))
+      .filter(
+        (tr) =>
+          (tr.type === 'outgoing' &&
+            cardNumbers.includes(tr.senderCardNumber)) ||
+          (tr.type === 'incoming' &&
+            tr.status === 'completed' &&
+            cardNumbers.includes(tr.receiverCardNumber)),
       );
   }
 
   async getById(id: string, userId: string) {
     const cards = await firstValueFrom(
-      this.cardClient.send({ cmd: 'get-cards-by-user' }, userId)
+      this.cardClient.send({ cmd: 'get-cards-by-user' }, userId),
     );
-    const cardIds = cards.map(card => card.id);
+    const cardNumbers = cards.map((card) => card.cardNumber);
     const transfer = await this.prisma.transfer.findUnique({ where: { id } });
     if (!transfer) throw new BadRequestException('Transfer not found');
 
     let type: 'incoming' | 'outgoing' | null = null;
-    let cardId: string | null = null;
+    let cardNumber: string | null = null;
     
-    if (cardIds.includes(transfer.senderCardId)) {
+    if (cardNumbers.includes(transfer.senderCardNumber)) {
       type = 'outgoing';
-      cardId = transfer.senderCardId;
-    } else if (cardIds.includes(transfer.receiverCardId)) {
+      cardNumber = transfer.senderCardNumber;
+    } else if (cardNumbers.includes(transfer.receiverCardNumber)) {
       type = 'incoming';
-      cardId = transfer.receiverCardId;
+      cardNumber = transfer.receiverCardNumber;
     } else {
       throw new ForbiddenException('Access denied');
     }
 
-    await this.historyClient.send({ cmd: 'history.log' }, { userId, eventType: 'ADMIN_ACTION', meta: { action: 'payment.getById', transferId: id } }).toPromise();
+    await this.historyClient
+      .send(
+        { cmd: 'history.log' },
+        {
+          userId,
+          eventType: 'ADMIN_ACTION',
+          meta: { action: 'payment.getById', transferId: id },
+        },
+      )
+      .toPromise();
 
     return {
       ...transfer,
       type,
-      cardId,
+      cardNumber,
     };
+  }
+
+  async getHistoryByCard(cardNumber: string, userId: string) {
+    const card = await firstValueFrom(
+      this.cardClient.send({ cmd: 'get-card-by-number' }, cardNumber),
+    );
+
+    if (!card) {
+      throw new BadRequestException('Card not found');
+    }
+
+    if (card.userId !== userId) {
+      throw new ForbiddenException('Not your card');
+    }
+
+    const transfers = await this.prisma.transfer.findMany({
+      where: {
+        OR: [
+          { senderCardNumber: cardNumber },
+          { receiverCardNumber: cardNumber },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return transfers.map((tr) => ({
+      ...tr,
+      type: tr.senderCardNumber === cardNumber ? 'outgoing' : 'incoming',
+      cardNumber,
+    }));
   }
 }
 

@@ -47,24 +47,35 @@ export class PaymentController {
     return this.paymentService.transfer(dto, req.user.userId);
   }
 
-    @Get('history')
-    @UseGuards(JwtGuard, VerificationGuard)
-    @HttpCode(200)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Get payment history for current user' })
-    @ApiOkResponse({ description: 'History returned' })
-    async getHistory(@Req() req) {
-        return this.paymentService.getHistory(req.user.userId);
-    }
+  @Get('history')
+  @UseGuards(JwtGuard, VerificationGuard)
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get payment history for current user' })
+  @ApiOkResponse({ description: 'History returned' })
+  async getHistory(@Req() req) {
+    return this.paymentService.getHistory(req.user.userId);
+  }
 
-    @Get(':id')
-    @UseGuards(JwtGuard, VerificationGuard)
-    @HttpCode(200)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Get payment by id' })
-    @ApiParam({ name: 'id', type: String })
-    @ApiOkResponse({ description: 'Payment returned' })
-    async getById(@Param('id') id: string, @Req() req) {
-        return this.paymentService.getById(id, req.user.userId);
-    }
+  @Get('history/:cardNumber')
+  @UseGuards(JwtGuard, VerificationGuard)
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get payment history for a specific card' })
+  @ApiParam({ name: 'cardNumber', type: String })
+  @ApiOkResponse({ description: 'Card payment history returned' })
+  async getHistoryByCard(@Param('cardNumber') cardNumber: string, @Req() req) {
+    return this.paymentService.getHistoryByCard(cardNumber, req.user.userId);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtGuard, VerificationGuard)
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get payment by id' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiOkResponse({ description: 'Payment returned' })
+  async getById(@Param('id') id: string, @Req() req) {
+    return this.paymentService.getById(id, req.user.userId);
+  }
 }  

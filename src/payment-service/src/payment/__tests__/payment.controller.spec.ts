@@ -50,6 +50,14 @@ describe('PaymentController', () => {
     expect(service.getHistory).toHaveBeenCalledWith('u1');
   });
 
+  it('should call getHistoryByCard', async () => {
+    service.getHistoryByCard = jest.fn().mockResolvedValue([{ id: 't1' }]);
+    const req = { user: { userId: 'u1' } };
+    const result = await controller.getHistoryByCard('111', req as any);
+    expect(result).toEqual([{ id: 't1' }]);
+    expect(service.getHistoryByCard).toHaveBeenCalledWith('111', 'u1');
+  });
+
   it('should call getById', async () => {
     service.getById.mockResolvedValue({ id: 't2' });
     const req = { user: { userId: 'u1' } };
