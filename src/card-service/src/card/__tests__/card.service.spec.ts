@@ -41,15 +41,13 @@ describe('CardService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should create card application', async () => {
+  it('should create card immediately (no application)', async () => {
     const dto = { cardType: 'debit', provider: 'visa' };
-    const mockApp = { id: '1', ...dto, status: 'pending', userId: 'u1' };
-    prisma.cardApplication.create.mockResolvedValue(mockApp);
+    const mockCard = { id: '1', userId: 'u1', cardType: 'debit', provider: 'visa', status: 'active', cardNumber: '123', cvvHash: 'hash' };
+    jest.spyOn<any, any>(service as any, 'openCard').mockResolvedValue(mockCard);
     const result = await service.createCardApplication('u1', dto as any);
-    expect(result).toEqual(mockApp);
-    expect(prisma.cardApplication.create).toHaveBeenCalledWith({
-      data: { userId: 'u1', cardType: 'debit', provider: 'visa', status: 'pending' },
-    });
+    expect(result).toEqual(mockCard);
+    expect(service['openCard']).toHaveBeenCalledWith('u1', dto);
   });
 
   it('should find all cards by user', async () => {
@@ -109,26 +107,6 @@ describe('CardService', () => {
     const result = await service.getAllApplications();
     expect(result).toEqual([{ id: '1' }]);
     expect(prisma.cardApplication.findMany).toHaveBeenCalled();
-  });
-
-  it('should throw if application not found on approve', async () => {
-    prisma.cardApplication.findUnique.mockResolvedValue(null);
-    await expect(service.approveApplication('1')).rejects.toThrow('Application not found');
-  });
-
-  it('should return message if application already approved', async () => {
-    prisma.cardApplication.findUnique.mockResolvedValue({ id: '1', status: 'approved' });
-    const result = await service.approveApplication('1');
-    expect(result).toEqual({ message: 'Application already approved' });
-  });
-
-  it('should approve application and create card', async () => {
-    const app = { id: '1', status: 'pending', userId: 'u1', cardType: 'debit', provider: 'visa' };
-    prisma.cardApplication.findUnique.mockResolvedValue(app);
-    prisma.cardApplication.update.mockResolvedValue(app);
-    jest.spyOn<any, any>(service as any, 'openCard').mockResolvedValue({ id: 'card1', cvv: '123' });
-    const result = await service.approveApplication('1');
-    expect(result).toEqual({ id: 'card1', cvv: '123' });
   });
 
   describe('transfer', () => {

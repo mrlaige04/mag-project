@@ -17,8 +17,6 @@ describe('CardController', () => {
       closeCard: jest.fn(),
       findAllByUser: jest.fn(),
       findOne: jest.fn(),
-      getAllApplications: jest.fn(),
-      approveApplication: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -79,20 +77,6 @@ describe('CardController', () => {
     const result = await controller.getAllByUser(req as any);
     expect(result).toEqual([{ id: '1' }]);
     expect(service.findAllByUser).toHaveBeenCalledWith('u1');
-  });
-
-  it('should call getApplications', async () => {
-    service.getAllApplications.mockResolvedValue([{ id: '1' }]);
-    const result = await controller.getApplications();
-    expect(result).toEqual([{ id: '1' }]);
-    expect(service.getAllApplications).toHaveBeenCalled();
-  });
-
-  it('should call approveApplication', async () => {
-    service.approveApplication.mockResolvedValue({ id: '1' });
-    const result = await controller.approveApplication('1');
-    expect(result).toEqual({ id: '1' });
-    expect(service.approveApplication).toHaveBeenCalledWith('1');
   });
 
   it('should call getOne', async () => {
