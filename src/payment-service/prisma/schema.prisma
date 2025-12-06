@@ -10,8 +10,8 @@ datasource db {
 
 model Transfer {
   id             String   @id @default(uuid())
-  senderCardId   String
-  receiverCardId String
+  senderCardNumber   String
+  receiverCardNumber String
   amount         Decimal
   currency       String
   status         PaymentStatus
