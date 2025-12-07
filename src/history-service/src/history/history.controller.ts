@@ -1,14 +1,14 @@
 import { Controller, Get, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { HistoryService } from './history.service';
-import { JwtGuard, VerificationGuard, AdminRoleGuard } from '@app/common';
+import { JwtGuard, AdminRoleGuard } from '@app/common';
 
 @ApiTags('history')
 @Controller('history')
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 
-  @UseGuards(JwtGuard, VerificationGuard, AdminRoleGuard)
+  @UseGuards(JwtGuard, AdminRoleGuard)
   @Get('user/:userId')
   @HttpCode(200)
   @ApiBearerAuth()
@@ -19,7 +19,7 @@ export class HistoryController {
     return this.historyService.getUserEvents(userId);
   }
 
-  @UseGuards(JwtGuard, VerificationGuard, AdminRoleGuard)
+  @UseGuards(JwtGuard, AdminRoleGuard)
   @Get('all')
   @HttpCode(200)
   @ApiBearerAuth()
